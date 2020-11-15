@@ -1,69 +1,76 @@
--- 1-3 Import przez gui
+-- 1-- Utwórz tabelę obiekty. W tabeli umieść nazwy i geometrie obiektów przedstawionych poniżej.
+-- Układ odniesienia ustal jako niezdefiniowany
 
--- 4. Wyznacz liczbę budynków (tabela: popp, atrybut: f_codedesc, reprezentowane, jako punkty)
--- położonych w odległości mniejszej niż 100000 m od głównych rzek. Budynki spełniające to
--- kryterium zapisz do osobnej tabeli tableB
+DROP TABLE obiekty;
+CREATE TABLE obiekty
+(
+    id_obiektu serial,
+    nazwa      varchar(10),
+    geometria  geometry
+);
 
-CREATE TABLE tableB AS
-SELECT popp.*
-FROM popp,
-     majrivers
-WHERE popp.f_codedesc = 'Building'
-GROUP BY popp.gid
-HAVING MIN(ST_Distance(majrivers.geom, popp.geom)) < 100000;
+INSERT INTO obiekty (nazwa, geometria)
 
-SELECT COUNT(1)
-FROM tableB;
+--a)
+INSERT INTO obiekty(nazwa, geometria)
+VALUES ('obiekt1', ST_COLLECT(ARRAY [
+    'LINESTRING(0 1, 1 1)',
+    'CIRCULARSTRING(1 1, 2 0, 3 1, 4 2, 5 1)',
+    'LINESTRING(5 1, 6 1)'
+    ]));
 
+-- b
+INSERT INTO obiekty(nazwa, geometria)
+VALUES ('obiekt2', ST_COLLECT(ARRAY [
+    'LINESTRING(10 2, 10 6, 14 6)',
+    'CIRCULARSTRING(14 6, 16 4, 14 2)',
+    'CIRCULARSTRING(14 2, 12 0, 10 2)',
+    'CIRCULARSTRING(13 2, 11 2, 13 2)'
+    ]));
 
--- 5. Utwórz tabelę o nazwie airportsNew. Z tabeli airports do airportsNew zaimportuj nazwy lotnisk,
--- ich geometrię, a także atrybut elev, reprezentujący wysokość n.p.m.
-CREATE TABLE airportsNew AS
-SELECT name, geom, elev
-FROM airports;
--- a) Znajdź lotnisko, które położone jest najbardziej na zachód i najbardziej na wschód.
+-- c
+INSERT INTO obiekty (nazwa, geometria)
+VALUES ('obiekt3', 'POLYGON((10 17, 12 13, 7 15, 10 17))');
 
-SELECT MIN(ST_Y(geom)), MAX(ST_Y(geom))
-FROM airportsNew;
---zachod
-CREATE VIEW zachod AS
-SELECT *
-FROM airportsNew
-ORDER BY ST_Y(geom) DESC
-LIMIT 1;
---wschod
-CREATE VIEW wschod AS
-SELECT *
-FROM airportsNew
-ORDER BY ST_Y(geom)
-LIMIT 1;
+-- d
+INSERT INTO obiekty (nazwa, geometria)
+VALUES ('obiekt4', 'LINESTRING(20 20, 25 25, 27 24, 25 22, 26 21, 22 19, 20.5 19.5)');
 
-SELECT *
-FROM wschod;
-SELECT *
-FROM zachod;
+--e)
+INSERT INTO obiekty (nazwa, geometria)
+VALUES ('obiekt5', 'MULTIPOINT(30 30 59, 38 32 234)');
 
--- b) Do tabeli airportsNew dodaj nowy obiekt - lotnisko, które położone jest w punkcie
--- środkowym drogi pomiędzy lotniskami znalezionymi w punkcie a. Lotnisko nazwij airportB.
--- Wysokość n.p.m. przyjmij dowolną.
+--f)
+INSERT INTO obiekty (nazwa, geometria)
+VALUES ('obiekt6', ST_Collect('LINESTRING(1 1, 3 2)', 'POINT(4 2)'));
 
-SELECT ST_Centroid(ST_MakeLine((SELECT geom FROM wschod), (SELECT geom FROM zachod)));
-INSERT INTO airportsNew (name, geom, elev)
-VALUES ('airportB',
-        (SELECT ST_Centroid(ST_MakeLine((SELECT geom FROM wschod), (SELECT geom FROM zachod)))),
-        12);
--- 6. Wyznacz pole powierzchni obszaru, który oddalony jest mniej niż 1000 jednostek od najkrótszej
--- linii łączącej jezioro o nazwie ‘Iliamna Lake’ i lotnisko o nazwie „AMBLER”
-SELECT ST_Area(ST_Buffer(ST_ShortestLine(
-                                     (SELECT geom FROM lakes WHERE names LIKE 'Iliamna Lake'),
-                                     (SELECT geom FROM airports WHERE name LIKE 'AMBLER')
-                             ), 1000));
+-- 2
+-- Wyznacz pole powierzchni bufora o wielkości 5 jednostek, który został utworzony wokół
+-- najkrótszej linii łączącej obiekt 3 i 4
+SELECT ST_Area(ST_Buffer(ST_ShortestLine(a.geometria, b.geometria), 5))
+FROM obiekty a,
+     obiekty b
+WHERE a.nazwa = 'obiekt3'
+  AND b.nazwa = 'obiekt4';
 
--- 7. Napisz zapytanie, które zwróci sumaryczne pole powierzchni poligonów reprezentujących
--- poszczególne typy drzew znajdujących się na obszarze tundry i bagien.
+-- 3
+-- Zamień obiekt4 na poligon. Jaki warunek musi być spełniony, aby można było wykonać to
+-- zadanie? Zapewnij te warunki.
+-- musi byc figura zamknieta
+UPDATE obiekty
+SET geom = ST_MakePolygon(ST_AddPoint(geom, 'POINT(20 20)'))
+WHERE nazwa = 'obiekt4';
 
-SELECT sum(st_area(trees.geom)), trees.cat
-FROM trees
-         RIGHT JOIN tundra t ON trees.cat = t.cat
-         RIGHT JOIN swamp s ON s.cat = s.cat
-GROUP BY trees.cat;
+-- 4
+--  W tabeli obiekty, jako obiekt7 zapisz obiekt złożony z obiektu 3 i obiektu 4.
+INSERT INTO obiekty(nazwa, geometria)
+VALUES ('obiekt7', ST_Collect(
+            (SELECT geometria FROM obiekty WHERE nazwa LIKE 'obiekt3'),
+            (SELECT geometria FROM obiekty WHERE nazwa LIKE 'obiekt4')
+    ));
+-- 5
+-- Wyznacz pole powierzchni wszystkich buforów o wielkości 5 jednostek, które zostały utworzone
+-- wokół obiektów nie zawierających łuków
+SELECT SUM(ST_Area(ST_Buffer(geometria, 5)))
+FROM obiekty
+WHERE ST_HasArc(geometria) = FALSE;
