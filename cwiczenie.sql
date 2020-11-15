@@ -9,8 +9,6 @@ CREATE TABLE obiekty
     geometria  geometry
 );
 
-INSERT INTO obiekty (nazwa, geometria)
-
 --a)
 INSERT INTO obiekty(nazwa, geometria)
 VALUES ('obiekt1', ST_COLLECT(ARRAY [
