@@ -1,0 +1,75 @@
+﻿1. Dla warstwy trees zmień ustawienia tak, aby lasy liściaste, iglaste i mieszane wyświetlane były innymi kolorami. Podaj pole powierzchni wszystkich lasów o charakterze mieszanym. 
+właściwości warstwy trees -> style -> wartość unikalna. Wybieramy VEGDESC -> klasyfikuj.
+
+
+Na warstwie trees ustawiamy funkcję sum(AREA_KM2) 
+wynik dla mixed: 189273.32699999996
+
+
+2. Podziel warstwę trees na trzy warstwy. Na każdej z nich umieść inny typ lasu. 
+wektor -> narzędzia zarządzania danymi ->  podziel warstwe wektorowa -> zaznaczyć trees.
+
+
+3. Oblicz długość linii kolejowych dla regionu Matanuska-Susitna.
+ 
+tabela wartości regions -> wyszukujemy Matanuska-Susitna -> kopiujemy do schowka -> edycja -> wklej obiekty jako -> nowa warstwa 
+
+
+wektor -> narzędzia geoprocesingu -> przytnij -> railroads i utworzona wcześniej warstwa -> uruchom
+kalkulator pól -> $length -> 34883.24270922694
+
+
+4. Oblicz, na jakiej średniej wysokości nad poziomem morza położone są lotniska o charakterze militarnym. Ile jest takich lotnisk? Usuń z warstwy airports lotniska o charakterze militarnym, które są dodatkowo położone powyżej 1400 m n.p.m. Ile było takich lotnisk? 
+
+
+-> edycja -> zaznacz -> zaznaczamy obiekty wyrażeniem ->  USE LIKE 'Military' 
+wynik: zaznaczono 7 lotnisk o charakterze militarnym
+
+
+- Średnia wysokość dla lotnisk o charakterze militarnym: kalkulator pól ->  mean(ELEV) -> 593.25
+
+
+-Usuwanie lotnisk powyżej 1400m:
+edycja -> zaznacz -> zaznaczamy obiekty wyrażeniem -> “ELEV > 1400” -> zaznacz obiekty -> włączamy tryb edycji -> usuwamy zaznaczone obiekty. 1 
+
+
+5. Utwórz warstwę, na której znajdować się będą jedynie budynki położone w regionie Bristol Bay (wykorzystaj warstwę popp). Podaj liczbę budynków. Na warstwie zostaw tylko te budynki, które są położone nie dalej niż 100 km od rzek (rivers). Ile jest takich budynków?
+
+
+Tak jak w zad nr 3. wyodrębniamy obszar jako warstwa i robimy przycięcie - wchodzi 11 budynków.
+Wybieramy bufor 100 km od rzek
+
+
+ 6. Sprawdź w ilu miejscach przecinają się rzeki (majrivers) z liniami kolejowymi 
+(railroads). 
+wektor -> narzędzia analizy -> przecięcia linii -> wybieramy warstwy majrivers i railroads
+wynik: 8 przeciec
+
+
+
+
+7. Wydobądź węzły dla warstwy railroads. Ile jest takich węzłów? 
+wektor -> narzędzia geometrii -> wydobądź wieżchołki -> railroads 
+wynik: 662
+
+
+8. Wyszukaj najlepsze lokalizacje do budowy hotelu. Hotel powinien być oddalony od lotniska nie więcej niż 100 km i nie mniej niż 50 km od linii kolejowych. Powinien leżeć także w pobliżu sieci drogowej.
+Tworzymy bufory:
+bufor dla warstwy airports z odległością:  100km, 
+dla railroads z odległością 50km,oraz dla trails z odległością 20km
+Po utworzeniu iloczyny tych buforow wychodzi warstwa z ktora wskazuje najlepsze miejsce do bufowy hotelu
+
+
+ 9. Uprość geometrię warstwy przedstawiającej bagna (swamps). Ustaw tolerancję na 100. Ile wierzchołków zostało zredukowanych? Czy zmieniło się pole powierzchni całkowitej wszystkich poligonów (jeżeli tak, to podaj różnicę)?
+
+
+Powierzchnia bagien: 
+-24719.761 km2
+-7 469 wierzchołków
+
+
+po uproszczeniu (tolerancja 100):
+- 24721.591 km2
+- 6 175 wierzchołków
+-pole sie nie zmienilo 
+-różnica wierzchołków: 1294
